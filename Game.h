@@ -25,6 +25,7 @@ private:
     float pi;
     int menuOption;
     bool ready;
+    int wallCount;
 
     //Window setup
     sf::RenderWindow* window;
@@ -63,7 +64,7 @@ private:
     void initWindow();
     void initFonts();
 	void initMessages();
-    void initPaddle();
+    void initDanny();
     void initBall();
     void danny();
 

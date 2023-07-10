@@ -1,5 +1,6 @@
 #include "Game.h"
 #include <string> 
+using namespace std;
 
 /**
  * Initialize global variables
@@ -10,15 +11,16 @@
 void Game::initVariables(){
     this->gameWidth = 800;
     this->gameHeight = 600;
-    this->paddleSize = sf::Vector2f(100, 100);
+    this->paddleSize = sf::Vector2f(32, 32);
     this->paddleSpeed = 600.f;
     this->isPlaying = false;
-    this->ballAngle = 0.f; // TODO
+    this->ballAngle = 0.f;
     this->ballRadius = 40.f;
     this->pi = 3.14159f;
     this->ballSpeed = 400.f;
     this->menuOption = 0;
     this->ready = true;
+    this->wallCount = 0;
 }
 
 /**
@@ -59,19 +61,9 @@ void Game::initMessages(){
 }
 
 /**
- * Creates paddle that moves along the x axis
+ * Create dodgin danny
  */
-void Game::initPaddle(){
-      // Create the left paddle
-    this->paddle.setSize(paddleSize - sf::Vector2f(3, 3));
-    this->paddle.setOutlineThickness(3);
-    this->paddle.setOutlineColor(sf::Color::Black);
-    this->paddle.setFillColor(sf::Color(100, 100, 200));
-    this->paddle.setOrigin(paddleSize / 2.f);
-    if(!this->paddleTexture.loadFromFile("resources/leftpaddle.png"))
-        return exit(0);
-    this->paddle.setTexture(&paddleTexture);
-
+void Game::initDanny(){
     this->dannyTexture.loadFromFile("resources/dannysprite.png");
     this->dannySprite = sf::IntRect(32, 0, 32, 48); //128 x 192
     this->sprite = sf::Sprite(dannyTexture,dannySprite);
@@ -80,7 +72,7 @@ void Game::initPaddle(){
 void Game::initBall(){
     // Create the rum ball
     this->ball.setRadius(ballRadius - 3);
-    //this->ball.setOutlineThickness(2);
+    this->ball.setOutlineThickness(2);
     this->ball.setOutlineColor(sf::Color::Black);
     this->ball.setFillColor(sf::Color::White);
     this->ball.setOrigin(ballRadius / 1, ballRadius / 1);
@@ -96,23 +88,22 @@ void Game::movePaddle(){
     float deltaTime = clock.restart().asSeconds();
     // Move user paddle
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) &&
-        (sprite.getPosition().x - paddleSize.y / 2 > 5.f)){
+        (sprite.getPosition().x + paddleSize.y / 2 > 20.f)){
         sprite.move(-paddleSpeed * deltaTime, 0.f);
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) &&
-        (paddle.getPosition().x + paddleSize.y / 2 < gameWidth - 5.f)){
+        (sprite.getPosition().x + paddleSize.y / 2 < gameWidth - 20.f)){
         sprite.move(paddleSpeed * deltaTime, 0.f);
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)){
-
         ball.setPosition(gameWidth / 2.f, gameHeight / 2.f);
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) &&
-        (paddle.getPosition().x - paddleSize.y / 2 > 5.f)){
+        (sprite.getPosition().y + paddleSize.y / 2 > 20.f)){
         sprite.move(0.f, -paddleSpeed * deltaTime);
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) &&
-        (paddle.getPosition().x + paddleSize.y / 2 < gameWidth - 5.f)){
+        (sprite.getPosition().y + paddleSize.y / 2 < gameHeight - 40.f)){
         sprite.move(0.f, paddleSpeed * deltaTime);
     }
     float factor = ballSpeed * deltaTime;
@@ -146,7 +137,7 @@ void Game::pollEvents(){
                     clock.restart();
 
                     // Reset the position of the paddles and ball
-                    paddle.setPosition(10.f + paddleSize.x / 2.f, gameHeight - 10.f - paddleSize.y);
+                    sprite.setPosition(10.f + paddleSize.x / 2.f, gameHeight - 10.f - paddleSize.y);
                     ball.setPosition(gameWidth / 2.f, gameHeight / 2.f);
 
                     // Reset the ball angle
@@ -162,7 +153,6 @@ void Game::pollEvents(){
                 }
                     
             }
-            // TODO menu screen button
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)){
                 if(menuOption == 0)
                     this->menuOption = 1;
@@ -184,23 +174,26 @@ void Game::checkWallCollisions(){
     // Check collisions between the ball and the screen
     const std::string inputString = "Press space to restart or\nescape to exit.";
     if (ball.getPosition().x <= 0.f){
-        this->ballAngle = pi + ballAngle - static_cast<float>(std::rand() % 20) * pi / 180;
+        this->ballAngle = pi - ballAngle + static_cast<float>(std::rand() % 20) * pi / 180;
         this->ball.setPosition(0.1f, ball.getPosition().y);
         this->ballSpeed += 40;
+        this->wallCount++;
     }
     if (ball.getPosition().x > gameWidth){
         this->ballAngle = pi - ballAngle - static_cast<float>(std::rand() % 20) * pi / 180;
         this->ball.setPosition(gameWidth, ball.getPosition().y);
         this->ballSpeed += 40;
+        this->wallCount++;
     }
     if (ball.getPosition().y - ballRadius < 0.f){
         this->ballAngle = -ballAngle;
         this->ball.setPosition(ball.getPosition().x, ballRadius + 0.1f);
-        this->ballSpeed += 40;
+        this->wallCount++;
     }
     if (ball.getPosition().y + ballRadius > gameHeight){
         this->ballAngle = -ballAngle;
         ball.setPosition(ball.getPosition().x, gameHeight - ballRadius - 0.1f);
+        this->wallCount++;
     }
 }
 
@@ -235,6 +228,9 @@ void Game::checkMenu(){
         
 }
 
+/**
+ * Move image along sprite sheet
+ */
 void Game::danny(){
     if (this->dannyClock.getElapsedTime().asSeconds() > 0.5f){
       if (dannySprite.left > 64) 
@@ -262,6 +258,8 @@ void Game::rungame(){
         this->movePaddle();
         this->window->draw(ball);
         this->window->draw(sprite);
+        this->defaultMessage.setString(std::to_string(wallCount));
+        this->window->draw(defaultMessage);
         this->checkWallCollisions();
         this->checkCollisions();
         }
@@ -283,6 +281,6 @@ Game::Game(){
     this->initWindow();
     this->initFonts();
     this->initMessages();
-    this->initPaddle();
+    this->initDanny();
     this->initBall();
 }
