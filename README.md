@@ -38,6 +38,10 @@ make clean
 .\clean.bat
 ```
 
+## Demo
+![dennisDemo](https://github.com/colbySullivan/Dodge-Danny/assets/88957296/e8ec6d19-4ce8-4489-935e-8855c93de4ea)
+
+
 # Dependencies
 Install of SMFL is required to run the program.
 
