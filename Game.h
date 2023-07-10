@@ -26,6 +26,8 @@ private:
     int menuOption;
     bool ready;
     int wallCount;
+    int bottomX;
+    int bottomY;
 
     //Window setup
     sf::RenderWindow* window;
@@ -41,8 +43,8 @@ private:
     sf::Text defaultMessage;
 
     // Create paddles
-    sf::RectangleShape paddle;
-    sf::Texture paddleTexture;
+    sf::Sprite goal;
+    sf::Texture goalTexture;
     sf::Texture dannyTexture;
     sf::IntRect dannySprite;
     sf::Sprite sprite;
@@ -67,6 +69,7 @@ private:
     void initDanny();
     void initBall();
     void danny();
+    void CreateGoal();
 
 public:
 	//Constructors / Destructors
@@ -80,6 +83,7 @@ public:
     void pollEvents();
     void movePaddle();
     void checkWallCollisions();
+    void checkGoalCollisions();
     void checkCollisions();
     void rungame();
 };

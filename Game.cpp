@@ -11,7 +11,7 @@ using namespace std;
 void Game::initVariables(){
     this->gameWidth = 800;
     this->gameHeight = 600;
-    this->paddleSize = sf::Vector2f(32, 32);
+    this->paddleSize = sf::Vector2f(100, 100);
     this->paddleSpeed = 600.f;
     this->isPlaying = false;
     this->ballAngle = 0.f;
@@ -21,13 +21,15 @@ void Game::initVariables(){
     this->menuOption = 0;
     this->ready = true;
     this->wallCount = 0;
+    this->bottomX = 10.f + paddleSize.x / 2.f;
+    this->bottomY = gameHeight - 10.f - paddleSize.y;
 }
 
 /**
  * Creates a new window instance with the global size variables
  */
 void Game::initWindow(){
-	this->window = new sf::RenderWindow(sf::VideoMode(static_cast<unsigned int>(gameWidth), static_cast<unsigned int>(gameHeight), 32), "Template",
+	this->window = new sf::RenderWindow(sf::VideoMode(static_cast<unsigned int>(gameWidth), static_cast<unsigned int>(gameHeight), 32), "D.E.N.N.I.S",
                             sf::Style::Titlebar | sf::Style::Close);
     this->window->setVerticalSyncEnabled(true);
     if(!this->backgroundTexture.loadFromFile("resources/basicMenu.png"))
@@ -67,6 +69,13 @@ void Game::initDanny(){
     this->dannyTexture.loadFromFile("resources/dannysprite.png");
     this->dannySprite = sf::IntRect(32, 0, 32, 48); //128 x 192
     this->sprite = sf::Sprite(dannyTexture,dannySprite);
+}
+
+void Game::CreateGoal(){
+    this->goalTexture.loadFromFile("resources/goalsprite.png");
+    this->dannySprite = sf::IntRect(32, 0, 32, 48); //128 x 192
+    this->goal = sf::Sprite(goalTexture,dannySprite);
+    this->goal.scale(1.5,1.5); //Goal bigger
 }
 
 void Game::initBall(){
@@ -134,10 +143,13 @@ void Game::pollEvents(){
                     // (re)start the game
                     this->ballSpeed = 400.f; // reset ball speed
                     this->isPlaying = true;
+                    this->wallCount = 0;
+                    this->CreateGoal();
                     clock.restart();
 
                     // Reset the position of the paddles and ball
-                    sprite.setPosition(10.f + paddleSize.x / 2.f, gameHeight - 10.f - paddleSize.y);
+                    sprite.setPosition(bottomX, bottomY);
+                    goal.setPosition(bottomX + (rand() % 300), bottomY - (rand() % 300));
                     ball.setPosition(gameWidth / 2.f, gameHeight / 2.f);
 
                     // Reset the ball angle
@@ -177,23 +189,19 @@ void Game::checkWallCollisions(){
         this->ballAngle = pi - ballAngle + static_cast<float>(std::rand() % 20) * pi / 180;
         this->ball.setPosition(0.1f, ball.getPosition().y);
         this->ballSpeed += 40;
-        this->wallCount++;
     }
     if (ball.getPosition().x > gameWidth){
         this->ballAngle = pi - ballAngle - static_cast<float>(std::rand() % 20) * pi / 180;
         this->ball.setPosition(gameWidth, ball.getPosition().y);
         this->ballSpeed += 40;
-        this->wallCount++;
     }
     if (ball.getPosition().y - ballRadius < 0.f){
         this->ballAngle = -ballAngle;
         this->ball.setPosition(ball.getPosition().x, ballRadius + 0.1f);
-        this->wallCount++;
     }
     if (ball.getPosition().y + ballRadius > gameHeight){
         this->ballAngle = -ballAngle;
         ball.setPosition(ball.getPosition().x, gameHeight - ballRadius - 0.1f);
-        this->wallCount++;
     }
 }
 
@@ -204,12 +212,23 @@ void Game::checkWallCollisions(){
  * param isBlock - shape collided is a block
  */
 void Game::checkCollisions(){
-    // Check the collisions between the ball and the paddles
+    // Check the collisions between the ball and the player
     if (ball.getPosition().x - ballRadius < sprite.getPosition().x + paddleSize.x / 2 &&
         ball.getPosition().x - ballRadius > sprite.getPosition().x - paddleSize.x / 2 &&
         ball.getPosition().y + ballRadius - 20.0f > sprite.getPosition().y - paddleSize.y / 2 - 0.1f &&
         ball.getPosition().y - ballRadius + 20.0f <= sprite.getPosition().y + paddleSize.y / 2 + 0.1f){
-            this->isPlaying = false;
+            this->menuOption == 0;
+            this->isPlaying = false;  
+    }
+}
+
+void Game::checkGoalCollisions(){
+    if (goal.getPosition().x - ballRadius < sprite.getPosition().x + paddleSize.x / 2 &&
+        goal.getPosition().x - ballRadius > sprite.getPosition().x - paddleSize.x / 2 &&
+        goal.getPosition().y + ballRadius - 20.0f > sprite.getPosition().y - paddleSize.y / 2 - 0.1f &&
+        goal.getPosition().y - ballRadius + 20.0f <= sprite.getPosition().y + paddleSize.y / 2 + 0.1f){
+            this->wallCount++; 
+            goal.setPosition(bottomX + (rand() % 300), bottomY - (rand() % 300));
     }
 }
 
@@ -225,7 +244,6 @@ void Game::checkMenu(){
         this->ready = true;
         this->defaultMessage.setString("Start");
     }
-        
 }
 
 /**
@@ -261,7 +279,9 @@ void Game::rungame(){
         this->defaultMessage.setString(std::to_string(wallCount));
         this->window->draw(defaultMessage);
         this->checkWallCollisions();
+        this->checkGoalCollisions();
         this->checkCollisions();
+        this->window->draw(goal);
         }
     else{
         this->checkMenu();
