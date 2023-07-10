@@ -30,6 +30,8 @@ private:
     sf::RenderWindow* window;
     sf::Texture backgroundTexture;
     sf::Sprite background;
+    sf::Texture playingbackgroundTexture;
+    sf::Sprite playingBackground;
 
     // Set font
     sf::Font font;

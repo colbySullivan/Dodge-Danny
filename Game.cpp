@@ -30,6 +30,9 @@ void Game::initWindow(){
     this->window->setVerticalSyncEnabled(true);
     if(!this->backgroundTexture.loadFromFile("resources/basicMenu.png"))
         return exit(0);
+    if(!this->playingbackgroundTexture.loadFromFile("resources/background.jpg"))
+        return exit(0);
+    this->playingBackground = sf::Sprite(playingbackgroundTexture);
     this->background = sf::Sprite(backgroundTexture);
 }
 
@@ -138,6 +141,7 @@ void Game::pollEvents(){
                 (this->event.type == sf::Event::TouchBegan)){
                 if (!this->isPlaying && ready){
                     // (re)start the game
+                    this->ballSpeed = 400.f; // reset ball speed
                     this->isPlaying = true;
                     clock.restart();
 
@@ -254,6 +258,7 @@ void Game::rungame(){
     this->window->clear(sf::Color(0, 0, 0));
     if (this->isPlaying){
         // Move user paddle
+        this->window->draw(playingBackground);
         this->movePaddle();
         this->window->draw(ball);
         this->window->draw(sprite);
